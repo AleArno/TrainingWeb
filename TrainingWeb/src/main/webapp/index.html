@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>applicazione web java e jquery</title>
+</head>
+<script src="http://code.jquery.com/jquery-latest.min.js"></script>
+<link rel="stylesheet" type="text/css"
+	href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
+ <script type="text/javascript" charset="utf8"
+	src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
+<script>
+	var table;
+	$(document).ready(function() {
+		table = $('#table').DataTable({
+			"displayLength": 5,
+			columns : [ {
+				"data" : "cf"
+			}, {
+				"data" : "name"
+			}, {
+				"data" : "surname"
+			}, {
+				"data" : "birth"
+			},{
+				"defaultContent": "<button class='editButton'>Edit</button>"
+			},{
+				"defaultContent": "<button class='deleteButton'>Delete</button>"
+			}
+			]
+		});
+		table.clear();
+	});
+</script>
+<script>
+
+$('#table tbody').on( 'click', 'deleteButton', function () {
+    var data = table.row( $(this).parents('tr') ).data();
+    alert( data[0] );
+} );
+
+</script>
+<script>
+	function post() {	
+		var name = $("#name").val(); 
+		var surname = $("#surname").val();
+		var birthFrom = $("#birthFrom").val();
+		var birthTo = $("#birthTo").val();
+		var input={"name":name,"surname":surname,"birthFrom":birthFrom,"birthTo":birthTo};
+		var json=JSON.stringify(input);
+		$.ajax({
+		    type: 'POST',
+		    url: 'rest/people/input',
+		    data: json, 
+		    success: function(responseJson) {
+				var table = $('#table').DataTable();
+				table.clear();
+				
+				table.rows.add(responseJson).draw();
+			},
+		    contentType: "application/json",
+		    dataType: 'json'
+		});
+	
+	/* var input={"name":name,"surname":surname,"birthFrom":birthFrom,"birthTo":birthTo};
+                    var json = JSON.stringify(input);
+                    console.log(json); 
+		 /* $.get("http://localhost:8080/TrainingWeb/rest/people/filter", personJson, function(responseJson) {
+			var table = $('#table').DataTable();
+			table.clear();
+			table.rows.add(responseJson).draw();
+		}); */ 
+	}
+</script>
+<body>
+	<form action="rest/people/filter" method="POST" id="form">
+		<h1>
+			Name: <input type="text" name="name" id="name">
+		</h1>
+		<h1>
+			Surname: <input type="text" name="surname" id="surname">
+		</h1>
+		<h1>
+			DateFrom: <input type="date" name="dateFrom" id="birthFrom">
+
+		</h1>
+		<h1>
+			DateTo: <input type="date" name="dateTo" id="birthTo">
+
+		</h1>
+		<h1>
+			<input type="button" id="submit" value="submit" onclick="post()">
+		</h1>
+	</form>
+	<table id="table" class="table table-bordered">
+		<thead>
+			<tr>
+				<th>CF</th>
+				<th>Name</th>
+				<th>Surname</th>
+				<th>Birth</th>
+			</tr>
+		</thead>
+	</table>
+</body>
+</html>
