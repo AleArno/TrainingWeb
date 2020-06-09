@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>applicazione web java e jquery</title>
+<title>Home</title>
 </head>
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <link rel="stylesheet" type="text/css"
@@ -9,9 +9,14 @@
  <script type="text/javascript" charset="utf8"
 	src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
 <script>
-	var table;
-	$(document).ready(function() {
-		table = $('#table').DataTable({
+//start of the page, show the initial part
+$(document).ready(function() {
+$('#showDiv').hide();
+$('#insert').hide();
+$('#search').hide();
+
+var table;
+table = $('#table').DataTable({
 			"displayLength": 5,
 			columns : [ {
 				"data" : "cf"
@@ -29,18 +34,50 @@
 			]
 		});
 		table.clear();
-	});
+});
 </script>
 <script>
-
-$('#table tbody').on( 'click', 'deleteButton', function () {
-    var data = table.row( $(this).parents('tr') ).data();
-    alert( data[0] );
-} );
-
+//show the part where you can search with a filter
+function toggleSearch(){
+$('#home').toggle();
+$('#showDiv').toggle();
+$('#search').toggle();
+}
 </script>
 <script>
-	function post() {	
+//show the part where you can insert a new Person
+function toggleInsert(){
+$('#home').toggle();
+$('#showDiv').toggle();
+$('#insert').toggle();
+}
+</script>
+
+<script>
+//function that send the json to the service that response with a string
+	function postInsert() {	
+		var cf = $("#cf").val();
+		var name = $("#nameInsert").val(); 
+		var surname = $("#surnameInsert").val();
+		var birth= $("#birth").val();
+		
+		var input={"cf":cf,"name":name,"surname":surname,"birth":birth};
+		var json=JSON.stringify(input);
+		$.ajax({
+		    type: 'POST',
+		    url: 'rest/people/insert',
+		    data: json, 
+		    success: function(response) {
+				alert(response);
+			},
+		    contentType: "application/json",
+		    dataType: 'text'
+		});
+	}
+</script>
+
+<script>
+	function postFilter() {	
 		var name = $("#name").val(); 
 		var surname = $("#surname").val();
 		var birthFrom = $("#birthFrom").val();
@@ -60,38 +97,46 @@ $('#table tbody').on( 'click', 'deleteButton', function () {
 		    contentType: "application/json",
 		    dataType: 'json'
 		});
-	
-	/* var input={"name":name,"surname":surname,"birthFrom":birthFrom,"birthTo":birthTo};
-                    var json = JSON.stringify(input);
-                    console.log(json); 
-		 /* $.get("http://localhost:8080/TrainingWeb/rest/people/filter", personJson, function(responseJson) {
-			var table = $('#table').DataTable();
-			table.clear();
-			table.rows.add(responseJson).draw();
-		}); */ 
 	}
+
 </script>
+
 <body>
-	<form action="rest/people/filter" method="POST" id="form">
-		<h1>
-			Name: <input type="text" name="name" id="name">
-		</h1>
-		<h1>
-			Surname: <input type="text" name="surname" id="surname">
-		</h1>
-		<h1>
-			DateFrom: <input type="date" name="dateFrom" id="birthFrom">
 
-		</h1>
-		<h1>
-			DateTo: <input type="date" name="dateTo" id="birthTo">
+</body>
+<div id='home'>
+SCELTA INIZIALE:<br>
+Ricerca:<input type='button' id='toggleFilter' value='FILTER' onclick='toggleSearch()'>
+<br>Inserimento:<input type='button' id='toggleDiv' value='DIV' onclick='toggleInsert()'>
+</div>
 
-		</h1>
-		<h1>
-			<input type="button" id="submit" value="submit" onclick="post()">
-		</h1>
-	</form>
-	<table id="table" class="table table-bordered">
+
+
+<div id='search'>
+Search page:
+<table>
+  <tr>
+    <th>Name:</th>  
+    <td><input type='text' id='name'></td>      
+  </tr>  
+  <tr>
+    <th>Surname:</th>
+    <td><input type='text' id='surname'></td>
+  </tr>
+  <tr>
+    <th>BirthFrom:</th>
+    <td><input type='date' id='birthFrom'></td>
+  </tr>
+   <tr>
+    <th>BirthTo:</th>
+    <td><input type='date' id='birthTo'></td>
+  </tr>
+</table>
+<br>
+<input type='button' id='postFilter' value='Submit' onclick='postFilter()'>
+<input type='button' id='backHome' value='Home' onclick='toggleSearch()'>
+<br>
+<table id="table" class="table table-bordered">
 		<thead>
 			<tr>
 				<th>CF</th>
@@ -101,5 +146,36 @@ $('#table tbody').on( 'click', 'deleteButton', function () {
 			</tr>
 		</thead>
 	</table>
+</div>
+
+
+
+
+<div id='insert' align='center'>
+Insert page:
+<table>
+  <tr>
+    <th>Cf:</th>
+    <td><input type='text' id='cf'></td>
+  </tr>
+  <tr>
+    <th>Name:</th>  
+    <td><input type='text' id='nameInsert'></td>      
+  </tr>  
+  <tr>
+    <th>Surname:</th>
+    <td><input type='text' id='surnameInsert'></td>
+  </tr>
+  <tr>
+    <th>Birth:</th>
+    <td><input type='date' id='birth'></td>
+  </tr>
+</table><br>
+<input type='submit' value='Submit' onclick='postInsert()'>
+<input type='button' id='showInsert' value='Home' onclick='toggleInsert()'>
+</div>
+
+
+
 </body>
 </html>
