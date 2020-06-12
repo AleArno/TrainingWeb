@@ -45,25 +45,16 @@ public class PersonResponse {
 	@Path("/insert")
 	@Consumes(MediaType.APPLICATION_JSON)
 	public String insertPerson(Person p) {
-
 		PersonInsert pi = new PersonInsert();
-		boolean result = pi.insert(p);
-		String message;
-		if (result == true) {
-			message = "Person successfully insert in DB!";
-		} else {
-			message = "Duplicated id!";
-		}
-		return message;
+		return pi.insert(p);
 	}
 
 	@DELETE
-	@Path("/delete")
+	@Path("/delete/{id}")
 	@Produces(MediaType.TEXT_HTML)
-	public String deletePerson(String id) {
+	public String deletePerson(@PathParam("id") String id) {
 		PersonDelete pd = new PersonDelete();
-		pd.delete(id);
-		return "Person deleted!";
+		return pd.delete(id);
 	}
 
 	@PUT
@@ -72,15 +63,7 @@ public class PersonResponse {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public String editPerson(@PathParam("cf") String id, Person p) {
 		PersonEdit pe = new PersonEdit();
-		String message;
-		boolean result = pe.edit(id, p);
-		if (result == true) {
-			message = "Person updated!";
-		} else {
-			message = "Error!";
-		}
-
-		return message;
+		return pe.edit(id, p);
 
 	}
 }

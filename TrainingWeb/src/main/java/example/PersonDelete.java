@@ -5,20 +5,30 @@ import java.sql.SQLException;
 
 public class PersonDelete {
 
-	public boolean delete(String id) {
-		boolean result = false;
-
+	public String delete(String id) {
+		String message;
+		IdFinder idf=new IdFinder();
+		boolean exist=idf.controlId(id);
+		if(exist==true) {
 		DatabaseConnection dc = DatabaseConnection.getInstance();
 		String qry = "DELETE FROM person where uniqueKey=?";
 		dc.start();
-
+		PreparedStatement stmt;
 		try {
-			PreparedStatement stmt = dc.getCon().prepareStatement(qry);
+			stmt = dc.getCon().prepareStatement(qry);
 			stmt.setString(1, id);
-			result = stmt.execute();
+			stmt.execute();
+			stmt.close();
+			message="Person deleted!";
 		} catch (SQLException e) {
-			System.out.println(e);
+			message="Error deleting the person";
 		}
-		return result;
+		finally {
+			dc.closeConnection();
+		}
+		}else {
+			message="There aren't people with the given cf";
+		}
+		return message;
 	}
 }

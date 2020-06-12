@@ -1,17 +1,18 @@
 package example;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 
 public class PersonInsert {
 
-	public boolean insert(Person p) {
-		boolean exist=false;
-		boolean id=controlId(p.getCf());
+	public String insert(Person p) {
+		String message="Duplicated id!";
+		IdFinder idf=new IdFinder();
+		boolean id=idf.controlId(p.getCf());
 		DatabaseConnection dc=DatabaseConnection.getInstance();
 		if(id==false) {
+			dc.start();
 		String qry="INSERT INTO person (uniqueKey,name,surname,birth,tinsert) VALUES(?,?,?,?,?);";
 		try {
 			PreparedStatement stmt = dc.getCon().prepareStatement(qry);
@@ -21,38 +22,20 @@ public class PersonInsert {
 			stmt.setString(3, p.getSurname());
 			stmt.setString(4, p.getBirth());
 			stmt.setString(5, timestamp+"");
-			
 			stmt.execute();
 			stmt.close();
-			exist=true;
+			message="Person successfully insert in DB!";
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		finally {
+			dc.closeConnection();
+		}
 		}
 		
-		return exist;
+		return message;
 		
 	}
-	private boolean controlId(String id) {
-		boolean exist=false;
-		DatabaseConnection dc=DatabaseConnection.getInstance();
-		dc.start();
-		String qry="SELECT * FROM person WHERE uniqueKey=?;";
-		PreparedStatement stmt;
-		try {
-			stmt = dc.getCon().prepareStatement(qry);
-			stmt.setString(1, id);
-			ResultSet rs=stmt.executeQuery();
-			rs.last();
-			int rows = rs.getRow();
-			
-			if(rows>0) {
-				exist=true;
-			}
-		}catch (SQLException e) {
-			e.printStackTrace();
-		}
-		return exist;
-	}
+	
 	
 }

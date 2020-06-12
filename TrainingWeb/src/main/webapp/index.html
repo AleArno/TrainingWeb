@@ -6,18 +6,25 @@
 <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 <link rel="stylesheet" type="text/css"
 	href="https://cdn.datatables.net/1.10.21/css/jquery.dataTables.css">
- <script type="text/javascript" charset="utf8"
+<script type="text/javascript" charset="utf8"
 	src="https://cdn.datatables.net/1.10.21/js/jquery.dataTables.js"></script>
-<script>
-//start of the page, show the initial part
-$(document).ready(function() {
-$('#showDiv').hide();
-$('#insert').hide();
-$('#search').hide();
+<script
+	src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.min.js"></script>
 
-var table;
-table = $('#table').DataTable({
-			"displayLength": 5,
+<script>
+	//start of the page, show the initial part
+	$(document).ready(function() {
+		$('#showDiv').hide();
+		$('#insert').hide();
+		$('#search').hide();
+		$('#edit').hide();
+		$('#idEdit').hide();
+		var table;
+		table = $('#table').DataTable({
+			"displayLength" : 5,
+			select : {
+				style : 'single'
+			},
 			columns : [ {
 				"data" : "cf"
 			}, {
@@ -26,117 +33,234 @@ table = $('#table').DataTable({
 				"data" : "surname"
 			}, {
 				"data" : "birth"
-			},{
-				"defaultContent": "<button class='editButton'>Edit</button>"
-			},{
-				"defaultContent": "<button class='deleteButton'>Delete</button>"
-			}
-			]
+			} ]
 		});
 		table.clear();
-});
+	});
+	$('#table tbody').on('click', 'tr', function() {
+		if ($(this).hasClass('selected')) {
+			$(this).removeClass('selected');
+		} else {
+			table.$('tr.selected').removeClass('selected');
+			$(this).addClass('selected');
+		}
+	});
 </script>
 <script>
-//show the part where you can search with a filter
-function toggleSearch(){
-$('#home').toggle();
-$('#showDiv').toggle();
-$('#search').toggle();
-}
+	//show the part where you can search with a filter
+	function toggleSearch() {
+		$('#home').toggle();
+		$('#showDiv').toggle();
+		$('#search').toggle();
+		$('#table').DataTable().clear().draw();
+	}
 </script>
 <script>
-//show the part where you can insert a new Person
-function toggleInsert(){
-$('#home').toggle();
-$('#showDiv').toggle();
-$('#insert').toggle();
-}
-</script>
-
-<script>
-//function that send the json to the service that response with a string
-	function postInsert() {	
-		var cf = $("#cf").val();
-		var name = $("#nameInsert").val(); 
-		var surname = $("#surnameInsert").val();
-		var birth= $("#birth").val();
-		
-		var input={"cf":cf,"name":name,"surname":surname,"birth":birth};
-		var json=JSON.stringify(input);
-		$.ajax({
-		    type: 'POST',
-		    url: 'rest/people/insert',
-		    data: json, 
-		    success: function(response) {
-				alert(response);
-			},
-		    contentType: "application/json",
-		    dataType: 'text'
-		});
+	//show the part where you can insert a new Person
+	function toggleInsert() {
+		$('#home').toggle();
+		$('#showDiv').toggle();
+		$('#insert').toggle();
 	}
 </script>
 
 <script>
-	function postFilter() {	
-		var name = $("#name").val(); 
+	//function that send the json to the service that response with a string
+	function postInsert() {
+		var cf = $("#cf").val();
+		var name = $("#nameInsert").val();
+		var surname = $("#surnameInsert").val();
+		var birth = $("#birth").val();
+		var input = {
+			"cf" : cf,
+			"name" : name,
+			"surname" : surname,
+			"birth" : birth
+		};
+		var json = JSON.stringify(input);
+		$.ajax({
+			type : 'POST',
+			url : 'rest/people/insert',
+			data : json,
+			success : function(response) {
+				alert(response);
+			},
+			contentType : "application/json",
+			dataType : 'text'
+		});
+		
+		toggleInsert();
+		$("#cf").val('');
+		$("#nameInsert").val('');
+		$("#surnameInsert").val('');
+		$("#birth").val('');
+	}
+</script>
+
+<script>
+	function postFilter() {
+		var name = $("#name").val();
 		var surname = $("#surname").val();
 		var birthFrom = $("#birthFrom").val();
 		var birthTo = $("#birthTo").val();
-		var input={"name":name,"surname":surname,"birthFrom":birthFrom,"birthTo":birthTo};
-		var json=JSON.stringify(input);
+		var input = {
+			"name" : name,
+			"surname" : surname,
+			"birthFrom" : birthFrom,
+			"birthTo" : birthTo
+		};
+		var json = JSON.stringify(input);
 		$.ajax({
-		    type: 'POST',
-		    url: 'rest/people/input',
-		    data: json, 
-		    success: function(responseJson) {
+			type : 'POST',
+			url : 'rest/people/input',
+			data : json,
+			success : function(responseJson) {
 				var table = $('#table').DataTable();
 				table.clear();
-				
+
 				table.rows.add(responseJson).draw();
 			},
-		    contentType: "application/json",
-		    dataType: 'json'
+			contentType : "application/json",
+			dataType : 'json'
 		});
 	}
+</script>
+<script> 
+function cleanFilter(){
+	$("#name").val('');
+	$("#surname").val('');
+	$("#birthFrom").val('');
+	$("#birthTo").val('');
+}
+</script>
+<script>
+	//where you select the row and send data that you would to delete
+	function deleteData() {
+		var table;
+		table = $('#table').DataTable();
+		var data = table.rows({
+			selected : true
+		}).data();
+		var cf = data[0].cf;
+		$.ajax({
+			url : 'rest/people/delete/' + cf,
+			type : 'DELETE',
+			success : function(result) {
+				alert(result);
+			}
+		});
+		$('#search').hide();
+		$('#home').show();
+		cleanFilter();
+	}
+</script>
 
+<script>
+	function editData() {
+		var table;
+		table = $('#table').DataTable();
+		var data = table.rows({
+			selected : true
+		}).data();
+		var cf = data[0].cf;
+		var name = data[0].name;
+		var surname = data[0].surname;
+		var birth = data[0].birth;
+		$('#idEdit').val(cf);
+		$('#cfEdit').val(cf);
+		$('#nameEdit').val(name);
+		$('#surnameEdit').val(surname);
+		$('#birthEdit').val(birth);
+		$('#edit').show();
+		$('#search').hide();
+		cleanFilter();
+	}
+</script>
+
+<script>
+	function backToSearch() {
+		$('#edit').toggle();
+		$('#search').toggle();
+	}
+</script>
+
+<script>
+	function editRecord() {
+		var id = $('#idEdit').val();
+		var cf = $('#cfEdit').val();
+		var name = $('#nameEdit').val();
+		var surname = $('#surnameEdit').val();
+		var birth = $('#birthEdit').val();
+		var input = {
+			"cf" : cf,
+			"name" : name,
+			"surname" : surname,
+			"birth" : birth
+		};
+		var json = JSON.stringify(input);
+		$.ajax({
+			type : 'PUT',
+			url : 'rest/people/edit/' + id,
+			contentType : 'application/json',
+			data : json,
+			success : function(response) {
+				alert(response);
+			},
+			contentType : "application/json",
+			dataType : 'text'
+		});
+		$('#edit').hide();
+		$('#home').show();
+
+	}
 </script>
 
 <body>
 
 </body>
-<div id='home'>
-SCELTA INIZIALE:<br>
-Ricerca:<input type='button' id='toggleFilter' value='FILTER' onclick='toggleSearch()'>
-<br>Inserimento:<input type='button' id='toggleDiv' value='DIV' onclick='toggleInsert()'>
+<div id='home' align='center'>
+	HOME<br>
+	<table>
+		<tr>
+			<th>Go to the filter:</th>
+			<td><input type='button'
+		id='toggleFilter' value='FILTER' onclick='toggleSearch()'></td>
+		</tr>
+		<tr>
+			<th>To insert new Person:</th>
+			<td><input
+		type='button' id='toggleDiv' value='INSERT' onclick='toggleInsert()'></td>
+		</tr>  
+		</table>
 </div>
 
-
-
 <div id='search'>
-Search page:
-<table>
-  <tr>
-    <th>Name:</th>  
-    <td><input type='text' id='name'></td>      
-  </tr>  
-  <tr>
-    <th>Surname:</th>
-    <td><input type='text' id='surname'></td>
-  </tr>
-  <tr>
-    <th>BirthFrom:</th>
-    <td><input type='date' id='birthFrom'></td>
-  </tr>
-   <tr>
-    <th>BirthTo:</th>
-    <td><input type='date' id='birthTo'></td>
-  </tr>
-</table>
-<br>
-<input type='button' id='postFilter' value='Submit' onclick='postFilter()'>
-<input type='button' id='backHome' value='Home' onclick='toggleSearch()'>
-<br>
-<table id="table" class="table table-bordered">
+	Search page:
+	<table>
+		<tr>
+			<th>Name:</th>
+			<td><input type='text' id='name'></td>
+		</tr>
+		<tr>
+			<th>Surname:</th>
+			<td><input type='text' id='surname'></td>
+		</tr>
+		<tr>
+			<th>BirthFrom:</th>
+			<td><input type='date' id='birthFrom'></td>
+		</tr>
+		<tr>
+			<th>BirthTo:</th>
+			<td><input type='date' id='birthTo'></td>
+		</tr>
+	</table>
+	<br> <input type='button' id='postFilter' value='Submit'
+		onclick='postFilter()'> <input type='button' id='backHome'
+		value='Home' onclick='toggleSearch()'> <br>
+	<br> <input type='button' id='deleteButton' value='DELETE'
+		onclick="deleteData()"> <input type='button' id='editButton'
+		value='EDIT' onclick="editData()">
+	<table id="table" class="table table-bordered">
 		<thead>
 			<tr>
 				<th>CF</th>
@@ -152,29 +276,55 @@ Search page:
 
 
 <div id='insert' align='center'>
-Insert page:
-<table>
-  <tr>
-    <th>Cf:</th>
-    <td><input type='text' id='cf'></td>
-  </tr>
-  <tr>
-    <th>Name:</th>  
-    <td><input type='text' id='nameInsert'></td>      
-  </tr>  
-  <tr>
-    <th>Surname:</th>
-    <td><input type='text' id='surnameInsert'></td>
-  </tr>
-  <tr>
-    <th>Birth:</th>
-    <td><input type='date' id='birth'></td>
-  </tr>
-</table><br>
-<input type='submit' value='Submit' onclick='postInsert()'>
-<input type='button' id='showInsert' value='Home' onclick='toggleInsert()'>
+	Insert page:
+	<table>
+		<tr>
+			<th>Cf:</th>
+			<td><input type='text' id='cf'></td>
+		</tr>
+		<tr>
+			<th>Name:</th>
+			<td><input type='text' id='nameInsert'></td>
+		</tr>
+		<tr>
+			<th>Surname:</th>
+			<td><input type='text' id='surnameInsert'></td>
+		</tr>
+		<tr>
+			<th>Birth:</th>
+			<td><input type='date' id='birth'></td>
+		</tr>
+	</table>
+	<br> <input type='submit' value='Submit' onclick='postInsert()'>
+	<input type='button' id='showInsert' value='Home'
+		onclick='toggleInsert()'>
 </div>
 
+
+<div id='edit' align='center'>
+
+	<table>
+		<input type='text' id='idEdit'>
+		<tr>
+			<th>Cf:</th>
+			<td><input type='text' id='cfEdit'></td>
+		</tr>
+		<tr>
+			<th>Name:</th>
+			<td><input type='text' id='nameEdit'></td>
+		</tr>
+		<tr>
+			<th>Surname:</th>
+			<td><input type='text' id='surnameEdit'></td>
+		</tr>
+		<tr>
+			<th>Birth:</th>
+			<td><input type='date' id='birthEdit'></td>
+		</tr>
+	</table>
+	<input type='button' id='update' value='Update' onclick='editRecord()'>
+	<input type='button' id='back' value='Back' onclick='backToSearch()'>
+</div>
 
 
 </body>

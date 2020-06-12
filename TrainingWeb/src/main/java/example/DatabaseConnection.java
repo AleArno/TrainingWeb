@@ -30,7 +30,6 @@ public class DatabaseConnection {
 
 		try {
 			con = DriverManager.getConnection("jdbc:mysql://127.0.0.1/people", "root", "");
-			System.out.println("Db connected");
 		} catch (SQLException e) {
 			System.err.println("Connection Failed");
 			e.printStackTrace();
